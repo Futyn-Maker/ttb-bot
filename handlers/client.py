@@ -6,6 +6,8 @@ from aiogram.dispatcher.filters import Text
 
 from bot import db, dp
 
+from handlers.history import generate_history
+
 from responses.client_responses import CLIENT_RESPONSES
 from responses.keyboards import ASK_KEYBOARD
 
@@ -32,30 +34,10 @@ async def show_history(message: types.Message):
     try:
         user = await db.get_user(message.from_user.id)
         if user:
-            if user["name"]:
-                name = f"{user['name']} @{user['tg_name']}"
-            else:
-                name = f"@{user['tg_name']}"
-
-            history = {}
-            async for response in db.get_user_responses(user["id"]):
-                timestamp = datetime.fromisoformat(response["timestamp"]).astimezone(moscow_tz)
-                date_str = timestamp.strftime("%d.%m.%Y")
-                time_str = timestamp.strftime("%H:%M")
-                history_response = CLIENT_RESPONSES["history_response"].format(time=time_str, text=response["text"])
-
-                if date_str not in history:
-                    history[date_str] = []
-                history[date_str].append(history_response)
-
-            if history:
-                history_text = "\n".join([CLIENT_RESPONSES["history_entry"].format(date=date, responses="\n".join(messages)) for date, messages in history.items()])
-                await message.answer(text=CLIENT_RESPONSES["history"].format(name=name, entries=history_text), parse_mode="HTML")
-            else:
-                await message.answer(text=CLIENT_RESPONSES["history_empty"])
-
+            user_name, history_text = await generate_history(user)
+            await message.answer(text=CLIENT_RESPONSES["history"].format(name=user_name, entries=history_text), parse_mode="HTML")
         else:
-            await message.answer(CLIENT_RESPONSES["history_empty"])
+            await message.answer(text=CLIENT_RESPONSES["history_empty"])
 
     except Exception as e:
         await message.answer(CLIENT_RESPONSES["history_error"].format(error=e))

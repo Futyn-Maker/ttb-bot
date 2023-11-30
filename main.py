@@ -3,7 +3,7 @@ import asyncio
 
 from aiogram.utils import executor
 
-from handlers import client
+from handlers import admin, client
 
 from bot import dp
 
