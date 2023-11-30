@@ -48,9 +48,10 @@ class Db:
             response_id = cursor.lastrowid
             return {"id": response_id, "user_id": user_id, "timestamp": timestamp, "text": text}
 
-    async def get_user(self, tg_id: int) -> Optional[Dict[str, Union[int, str]]]:
+    async def get_user(self, id: int, id_type: str = "tg_id") -> Optional[Dict[str, Union[int, str]]]:
         async with aiosqlite.connect(self.db_file) as conn:
-            cursor = await conn.execute("SELECT * FROM users WHERE tg_id = ?", (tg_id,))
+            query = "SELECT * FROM users WHERE {} = ?;".format(id_type)
+            cursor = await conn.execute(query, (id,))
             row = await cursor.fetchone()
             if row:
                 return {
@@ -72,14 +73,13 @@ class Db:
                     "tg_name": row[3]
                 }
 
-    async def get_user_responses(self, tg_id: int) -> AsyncGenerator[Dict[str, Union[int, str]], None]:
+    async def get_user_responses(self, user_id: int) -> AsyncGenerator[Dict[str, Union[int, str]], None]:
         async with aiosqlite.connect(self.db_file) as conn:
             cursor = await conn.execute("""
                 SELECT *
-                FROM responses r
-                INNER JOIN users u ON r.user_id = u.id
-                WHERE u.tg_id = ?;
-            """, (tg_id,))
+                FROM responses
+                WHERE user_id = ?;
+            """, (user_id,))
             async for row in cursor:
                 yield {
                     "id": row[0],
