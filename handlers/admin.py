@@ -10,6 +10,7 @@ from handlers.history import generate_history
 
 from responses.admin_responses import ADMIN_RESPONSES
 from responses.client_responses import CLIENT_RESPONSES
+from responses.history_responses import HISTORY_RESPONSES
 from responses.keyboards import ASK_KEYBOARD
 
 
@@ -38,8 +39,8 @@ async def show_all_history(message: types.Message):
         entries = []
         async for user in db.get_all_users():
             entry = await generate_history(user)
-            entries.append(CLIENT_RESPONSES["history"].format(name=entry[0], entries=entry[1]))
+            entries.append(HISTORY_RESPONSES["history"].format(name=entry[0], entries=entry[1]))
         await message.answer(text="\n\n".join(entries), parse_mode="HTML")
 
     except Exception as e:
-        await message.answer(CLIENT_RESPONSES["history_error"].format(error=e))
+        await message.answer(HISTORY_RESPONSES["history_error"].format(error=e))

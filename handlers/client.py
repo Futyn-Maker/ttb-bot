@@ -9,6 +9,7 @@ from bot import db, dp
 from handlers.history import generate_history
 
 from responses.client_responses import CLIENT_RESPONSES
+from responses.history_responses import HISTORY_RESPONSES
 from responses.keyboards import ASK_KEYBOARD
 
 
@@ -35,12 +36,12 @@ async def show_history(message: types.Message):
         user = await db.get_user(message.from_user.id)
         if user:
             user_name, history_text = await generate_history(user)
-            await message.answer(text=CLIENT_RESPONSES["history"].format(name=user_name, entries=history_text), parse_mode="HTML")
+            await message.answer(text=HISTORY_RESPONSES["history"].format(name=user_name, entries=history_text), parse_mode="HTML")
         else:
-            await message.answer(text=CLIENT_RESPONSES["history_empty"])
+            await message.answer(text=HISTORY_RESPONSES["history_empty"])
 
     except Exception as e:
-        await message.answer(CLIENT_RESPONSES["history_error"].format(error=e))
+        await message.answer(HISTORY_RESPONSES["history_error"].format(error=e))
 
 
 @dp.message_handler()
