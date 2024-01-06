@@ -2,7 +2,11 @@ from datetime import datetime
 import pytz
 
 from aiogram import types
+from aiogram.types.input_file import InputFile
 from aiogram.dispatcher.filters import Text
+
+from openpyxl import Workbook
+from io import BytesIO
 
 from bot import db, dp
 
@@ -44,3 +48,22 @@ async def show_all_history(message: types.Message):
 
     except Exception as e:
         await message.answer(HISTORY_RESPONSES["history_error"].format(error=e))
+
+
+@dp.message_handler(commands="exportdata")
+async def export_data(message: types.Message):
+    await message.answer(ADMIN_RESPONSES["excel_progress"])
+
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["Фамилия Имя", "Telegram", "Время", "Занятие"])
+
+    async for user in db.get_all_users():
+        async for response in db.get_user_responses(user['id']):
+            ws.append([user.get("name", ""), user["tg_name"], response["timestamp"], response["text"]])
+
+    with BytesIO() as file:
+        wb.save(file)
+        file.seek(0)
+        excel_file = InputFile(file, filename="UserResponses.xlsx")
+        await message.answer_document(document=excel_file)
