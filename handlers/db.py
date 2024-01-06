@@ -84,7 +84,8 @@ class Db:
             cursor = await conn.execute("""
                 SELECT *
                 FROM responses
-                WHERE user_id = ?;
+                WHERE user_id = ?
+                ORDER BY datetime(timestamp);
             """, (user_id,))
             async for row in cursor:
                 yield {
@@ -97,7 +98,7 @@ class Db:
 
     async def get_all_responses(self) -> AsyncGenerator[Dict[str, Union[int, str]], None]:
         async with aiosqlite.connect(self.db_file) as conn:
-            cursor = await conn.execute("SELECT * FROM responses;")
+            cursor = await conn.execute("SELECT * FROM responses ORDER BY datetime(timestamp);")
             async for row in cursor:
                 yield {
                     "id": row[0],

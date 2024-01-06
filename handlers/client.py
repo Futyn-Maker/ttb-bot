@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 import pytz
 
@@ -56,7 +57,18 @@ async def save_message(message: types.Message):
         else:
             name = None
         user = await db.add_user(message.from_user.id, message.from_user.username, name)
-    current_time = datetime.now(moscow_tz)
-    timestamp = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    await db.add_response(user["id"], timestamp, message.text)
+    lines = message.text.split("\n")
+    for line in lines:
+        match = re.match(r"(\d{2}:\d{2}):? (.+)", line)
+        if match:
+            user_time = match.group(1)
+            current_date = datetime.now(moscow_tz).strftime("%Y-%m-%d")
+            timestamp = f"{current_date} {user_time}:00"
+            text = match.group(2)
+        else:
+            current_time = datetime.now(moscow_tz)
+            timestamp = current_time.strftime("%Y-%m-%d %H:%M:%S")
+            text = line
+
+        await db.add_response(user["id"], timestamp, text)
     await message.answer(CLIENT_RESPONSES["message_saved"])
