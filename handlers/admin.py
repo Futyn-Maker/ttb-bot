@@ -20,21 +20,28 @@ from responses.keyboards import ASK_KEYBOARD
 
 moscow_tz = pytz.timezone("Europe/Moscow")
 
-@dp.message_handler(commands="askall")
-async def ask_all(message: types.Message):
-    await message.answer(ADMIN_RESPONSES["ask_all_progress"])
+async def ask_all(message: types.Message = None):
+    if message:
+        await message.answer(ADMIN_RESPONSES["ask_all_progress"])
 
     async for user in db.get_all_users():
-        if user["tg_id"] == message.from_user.id:
+        if message and user["tg_id"] == message.from_user.id:
             continue
 
         try:
             await dp.bot.send_message(chat_id=user["tg_id"], text=CLIENT_RESPONSES["ask"], reply_markup=ASK_KEYBOARD)
-            success_message = ADMIN_RESPONSES["ask_all_success"].format(datetime.now(moscow_tz).isoformat(), user["tg_name"])
-            await message.answer(text=success_message)
+            if message:
+                success_message = ADMIN_RESPONSES["ask_all_success"].format(datetime.now(moscow_tz).isoformat(), user["tg_name"])
+                await message.answer(text=success_message)
         except Exception as e:
-            failure_message = ADMIN_RESPONSES["ask_all_failure"].format(datetime.now(moscow_tz).isoformat(), user["tg_name"])
-            await message.answer(text=failure_message)
+            if message:
+                failure_message = ADMIN_RESPONSES["ask_all_failure"].format(datetime.now(moscow_tz).isoformat(), user["tg_name"])
+                await message.answer(text=failure_message)
+
+
+@dp.message_handler(commands="askall")
+async def ask_all_handler(message: types.Message):
+    await ask_all(message)
 
 
 @dp.message_handler(commands="historyall")
