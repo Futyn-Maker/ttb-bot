@@ -60,6 +60,8 @@ async def save_message(message: types.Message):
     else:
         lines = message.text.split("\n")
         for line in lines:
+            if not line:
+                continue
             match = re.match(r"(\d{2}:\d{2}):? (.+)", line)
             timestamp = f"{datetime.now(moscow_tz).strftime('%Y-%m-%d')} {match.group(1) if match else datetime.now(moscow_tz).strftime('%H:%M')}:00"
             text = match.group(2) if match else line
