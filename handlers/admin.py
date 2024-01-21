@@ -59,18 +59,28 @@ async def show_all_history(message: types.Message):
 
 @dp.message_handler(commands="exportdata")
 async def export_data(message: types.Message):
-    await message.answer(ADMIN_RESPONSES["excel_progress"])
+    await message.answer("Генерация таблицы Excel...")
 
     wb = Workbook()
-    ws = wb.active
-    ws.append(["Фамилия Имя", "Telegram", "Время", "Занятие"])
+
+    users_sheet = wb.active
+    users_sheet.title = "Users"
+    users_fields = ["id", "name", "tg_id", "tg_name", "age", "gender", "workplace", "workload", "subjects", "teaching_experience", "class_management", "classes", "consent_study", "consent_personal_data"]
+    users_sheet.append(users_fields)
 
     async for user in db.get_all_users():
-        async for response in db.get_user_responses(user['id']):
-            ws.append([user.get("name", ""), user["tg_name"], response["timestamp"], response["text"]])
+        user_data = [user[field] if field != 'tg_id' else str(user[field]) for field in users_fields]
+        users_sheet.append(user_data)
+
+    responses_sheet = wb.create_sheet("Responses")
+    response_fields = ["id", "user_id", "timestamp", "text"]
+    responses_sheet.append(response_fields)
+
+    async for response in db.get_all_responses():
+        responses_sheet.append([response[field] for field in response_fields])
 
     with BytesIO() as file:
         wb.save(file)
         file.seek(0)
-        excel_file = InputFile(file, filename="UserResponses.xlsx")
+        excel_file = InputFile(file, filename="anchovy_data.xlsx")
         await message.answer_document(document=excel_file)

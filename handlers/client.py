@@ -7,6 +7,7 @@ from aiogram.dispatcher.filters import Text
 
 from bot import db, dp
 
+from handlers.registration import RegistrationForm, on_form_finished
 from handlers.history import generate_history
 
 from responses.client_responses import CLIENT_RESPONSES
@@ -16,22 +17,27 @@ from responses.keyboards import ASK_KEYBOARD
 
 moscow_tz = pytz.timezone("Europe/Moscow")
 
-@dp.message_handler(commands="start")
+@dp.message_handler(commands="start", state="*")
 async def start(message: types.Message):
-    await message.answer(text=CLIENT_RESPONSES["start"], reply_markup=ASK_KEYBOARD)
+    user = await db.get_user(message.from_user.id)
+    if not user:
+        await message.answer(text=CLIENT_RESPONSES["need_registration"])
+        await RegistrationForm.start(callback=on_form_finished)
+    else:
+        await message.answer(text=CLIENT_RESPONSES["start"], reply_markup=ASK_KEYBOARD)
 
 
-@dp.message_handler(commands="help")
+@dp.message_handler(commands="help", state="*")
 async def show_help(message: types.Message):
     await message.answer(text=CLIENT_RESPONSES["help"])
 
 
-@dp.message_handler(commands="ask")
+@dp.message_handler(commands="ask", state="*")
 async def ask(message: types.Message):
     await message.answer(text=CLIENT_RESPONSES["ask"], reply_markup=ASK_KEYBOARD)
 
 
-@dp.message_handler(commands="history")
+@dp.message_handler(commands="history", state="*")
 async def show_history(message: types.Message):
     try:
         user = await db.get_user(message.from_user.id)
@@ -49,26 +55,13 @@ async def show_history(message: types.Message):
 async def save_message(message: types.Message):
     user = await db.get_user(message.from_user.id)
     if not user:
-        first_name, last_name = message.from_user.first_name, message.from_user.last_name
-        if first_name and last_name:
-            name = f"{first_name} {last_name}"
-        elif firstname:
-            name = first_name
-        else:
-            name = None
-        user = await db.add_user(message.from_user.id, message.from_user.username, name)
-    lines = message.text.split("\n")
-    for line in lines:
-        match = re.match(r"(\d{2}:\d{2}):? (.+)", line)
-        if match:
-            user_time = match.group(1)
-            current_date = datetime.now(moscow_tz).strftime("%Y-%m-%d")
-            timestamp = f"{current_date} {user_time}:00"
-            text = match.group(2)
-        else:
-            current_time = datetime.now(moscow_tz)
-            timestamp = current_time.strftime("%Y-%m-%d %H:%M:%S")
-            text = line
-
-        await db.add_response(user["id"], timestamp, text)
-    await message.answer(CLIENT_RESPONSES["message_saved"])
+        await message.answer(text=CLIENT_RESPONSES["need_registration"])
+        await RegistrationForm.start(callback=on_form_finished)
+    else:
+        lines = message.text.split("\n")
+        for line in lines:
+            match = re.match(r"(\d{2}:\d{2}):? (.+)", line)
+            timestamp = f"{datetime.now(moscow_tz).strftime('%Y-%m-%d')} {match.group(1) if match else datetime.now(moscow_tz).strftime('%H:%M')}:00"
+            text = match.group(2) if match else line
+            await db.add_response(user["id"], timestamp, text)
+        await message.answer(CLIENT_RESPONSES["message_saved"])
