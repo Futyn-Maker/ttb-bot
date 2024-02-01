@@ -75,8 +75,10 @@ async def save_message(message: types.Message):
         for line in lines:
             if not line:
                 continue
-            match = re.match(r"(\d{2}:\d{2}):? (.+)", line)
-            timestamp = f"{datetime.now(moscow_tz).strftime('%Y-%m-%d')} {match.group(1) if match else datetime.now(moscow_tz).strftime('%H:%M')}:00"
-            text = match.group(2) if match else line
-            await db.add_response(user["id"], timestamp, text)
+            match = re.match(r"(\d{2}[:.]\d{2})-?(\d{2}[:.]\d{2})?:? (.+)", line)
+            current_date = datetime.now(moscow_tz).strftime("%Y-%m-%d")
+            timestamp_start = f"{current_date} {match.group(1)}:00".replace(".", ":") if match else datetime.now(moscow_tz).strftime("%Y-%m-%d %H:%M:%S")
+            timestamp_end = f"{current_date} {match.group(2)}:00".replace(".", ":") if match and match.group(2) else None
+            text = match.group(3) if match else line
+            await db.add_response(user["id"], timestamp_start, timestamp_end, text)
         await message.answer(CLIENT_RESPONSES["message_saved"])

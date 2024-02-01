@@ -36,7 +36,8 @@ class Db:
                 CREATE TABLE IF NOT EXISTS responses (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    timestamp TEXT NOT NULL,
+                    timestamp_start TEXT NOT NULL,
+                    timestamp_end TEXT,
                     text TEXT NOT NULL,
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 );
@@ -63,15 +64,15 @@ class Db:
             await conn.commit()
 
 
-    async def add_response(self, user_id: int, timestamp: str, text: str) -> Dict[str, Union[int, str]]:
+    async def add_response(self, user_id: int, timestamp_start: str, timestamp_end: str, text: str) -> Dict[str, Union[int, str]]:
         async with aiosqlite.connect(self.db_file) as conn:
             cursor = await conn.execute("""
-                INSERT INTO responses (user_id, timestamp, text)
-                VALUES (?, ?, ?);
-            """, (user_id, timestamp, text))
+                INSERT INTO responses (user_id, timestamp_start, timestamp_end, text)
+                VALUES (?, ?, ?, ?);
+            """, (user_id, timestamp_start, timestamp_end, text))
             await conn.commit()
             response_id = cursor.lastrowid
-            return {"id": response_id, "user_id": user_id, "timestamp": timestamp, "text": text}
+            return {"id": response_id, "user_id": user_id, "timestamp_start": timestamp_start, "timestamp_end": timestamp_end, "text": text}
 
 
     async def get_user(self, id: int, id_type: str = "tg_id") -> Optional[Dict[str, Union[int, str, Optional[bool]]]]:
@@ -129,24 +130,26 @@ class Db:
                 SELECT *
                 FROM responses
                 WHERE user_id = ?
-                ORDER BY datetime(timestamp);
+                ORDER BY datetime(timestamp_start);
             """, (user_id,))
             async for row in cursor:
                 yield {
                     "id": row[0],
                     "user_id": row[1],
-                    "timestamp": row[2],
-                    "text": row[3]
+                    "timestamp_start": row[2],
+                    "timestamp_end": row[3],
+                    "text": row[4]
             }
 
 
     async def get_all_responses(self) -> AsyncGenerator[Dict[str, Union[int, str]], None]:
         async with aiosqlite.connect(self.db_file) as conn:
-            cursor = await conn.execute("SELECT * FROM responses ORDER BY datetime(timestamp);")
+            cursor = await conn.execute("SELECT * FROM responses ORDER BY datetime(timestamp_start);")
             async for row in cursor:
                 yield {
                     "id": row[0],
                     "user_id": row[1],
-                    "timestamp": row[2],
-                    "text": row[3]
+                    "timestamp_start": row[2],
+                    "timestamp_end": row[3],
+                    "text": row[4]
             }
