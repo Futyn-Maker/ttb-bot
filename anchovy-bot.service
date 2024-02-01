@@ -1,0 +1,13 @@
+[Unit]
+Description=Anchovy Telegram Bot
+After=network.target
+
+[Service]
+User=bots
+WorkingDirectory=/home/bots/anchovy-bot
+ExecStart=/home/bots/.venvs/anchovy-bot/bin/python /home/bots/anchovy-bot/main.py
+Restart=always
+Environment=ANCHOVY_API_TOKEN=your_token_here
+
+[Install]
+WantedBy=multi-user.target
