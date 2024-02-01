@@ -50,7 +50,7 @@ class Db:
             cursor = await conn.execute("""
                 INSERT INTO users (name, tg_id, tg_name, age, gender, workplace, workload, subjects, teaching_experience, class_management, classes, consent_study, consent_personal_data, notifications_wanted)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """, (name, tg_id, tg_name, kwargs.get('age'), kwargs.get('gender'), kwargs.get('workplace'), kwargs.get('workload'), kwargs.get('subjects'), kwargs.get('teaching_experience'), kwargs.get('class_management'), kwargs.get('classes'), kwargs.get('consent_study'), kwargs.get('consent_personal_data'), notifications_wanted))
+            """, (name, tg_id, tg_name, kwargs.get("age"), kwargs.get("gender"), kwargs.get("workplace"), kwargs.get("workload"), kwargs.get("subjects"), kwargs.get("teaching_experience"), kwargs.get("class_management"), kwargs.get("classes"), kwargs.get("consent_study"), kwargs.get("consent_personal_data"), notifications_wanted))
             await conn.commit()
             user_id = cursor.lastrowid
             return {"id": user_id, "name": name, "tg_id": tg_id, "tg_name": tg_name, "notifications_wanted": notifications_wanted, **kwargs}

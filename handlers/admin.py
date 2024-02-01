@@ -60,7 +60,7 @@ async def show_all_history(message: types.Message):
 
 @dp.message_handler(commands="exportdata")
 async def export_data(message: types.Message):
-    await message.answer("Генерация таблицы Excel...")
+    await message.answer(ADMIN_RESPONSES["excel_progress"])
 
     wb = Workbook()
 

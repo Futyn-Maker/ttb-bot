@@ -21,5 +21,5 @@ asyncio.set_event_loop(loop)
 async def scheduled_ask_all():
     await admin.ask_all()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
