@@ -28,15 +28,16 @@ async def ask_all(message: types.Message = None):
         if message and user["tg_id"] == message.from_user.id:
             continue
 
-        try:
-            await dp.bot.send_message(chat_id=user["tg_id"], text=CLIENT_RESPONSES["ask"], reply_markup=ASK_KEYBOARD)
-            if message:
-                success_message = ADMIN_RESPONSES["ask_all_success"].format(datetime.now(moscow_tz).isoformat(), user["tg_name"])
-                await message.answer(text=success_message)
-        except Exception as e:
-            if message:
-                failure_message = ADMIN_RESPONSES["ask_all_failure"].format(datetime.now(moscow_tz).isoformat(), user["tg_name"])
-                await message.answer(text=failure_message)
+        if user["notifications_wanted"]:
+            try:
+                await dp.bot.send_message(chat_id=user["tg_id"], text=CLIENT_RESPONSES["ask"], reply_markup=ASK_KEYBOARD)
+                if message:
+                    success_message = ADMIN_RESPONSES["ask_all_success"].format(datetime.now(moscow_tz).isoformat(), user["tg_name"])
+                    await message.answer(text=success_message)
+            except Exception as e:
+                if message:
+                    failure_message = ADMIN_RESPONSES["ask_all_failure"].format(datetime.now(moscow_tz).isoformat(), user["tg_name"])
+                    await message.answer(text=failure_message)
 
 
 @dp.message_handler(commands="askall")

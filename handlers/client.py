@@ -51,6 +51,19 @@ async def show_history(message: types.Message):
         await message.answer(HISTORY_RESPONSES["history_error"].format(error=e))
 
 
+@dp.message_handler(commands="reminders")
+async def toggle_reminders(message: types.Message):
+    user = await db.get_user(message.from_user.id)
+    if not user:
+        await message.answer(text=CLIENT_RESPONSES["need_registration"])
+        await RegistrationForm.start(callback=on_form_finished)
+    else:
+        notifications_wanted = not user["notifications_wanted"]
+        await db.update_notifications_wanted(user["id"], notifications_wanted)
+        answer = CLIENT_RESPONSES["reminders_true"] if notifications_wanted else CLIENT_RESPONSES["reminders_false"]
+        await message.answer(answer)
+
+
 @dp.message_handler()
 async def save_message(message: types.Message):
     user = await db.get_user(message.from_user.id)

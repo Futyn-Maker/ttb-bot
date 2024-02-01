@@ -29,7 +29,8 @@ class Db:
                     class_management BOOLEAN,
                     classes TEXT,
                     consent_study BOOLEAN,
-                    consent_personal_data BOOLEAN
+                    consent_personal_data BOOLEAN,
+                    notifications_wanted BOOLEAN
                 );
 
                 CREATE TABLE IF NOT EXISTS responses (
@@ -43,15 +44,23 @@ class Db:
             await conn.commit()
 
 
-    async def add_user(self, tg_id: int, tg_name: str, name: Optional[str] = None, **kwargs) -> Dict[str, Union[int, str, Optional[bool]]]:
+    async def add_user(self, tg_id: int, tg_name: str, name: Optional[str] = None, notifications_wanted: bool = True, **kwargs) -> Dict[str, Union[int, str, Optional[bool]]]:
         async with aiosqlite.connect(self.db_file) as conn:
             cursor = await conn.execute("""
-                INSERT INTO users (name, tg_id, tg_name, age, gender, workplace, workload, subjects, teaching_experience, class_management, classes, consent_study, consent_personal_data)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """, (name, tg_id, tg_name, kwargs.get('age'), kwargs.get('gender'), kwargs.get('workplace'), kwargs.get('workload'), kwargs.get('subjects'), kwargs.get('teaching_experience'), kwargs.get('class_management'), kwargs.get('classes'), kwargs.get('consent_study'), kwargs.get('consent_personal_data')))
+                INSERT INTO users (name, tg_id, tg_name, age, gender, workplace, workload, subjects, teaching_experience, class_management, classes, consent_study, consent_personal_data, notifications_wanted)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """, (name, tg_id, tg_name, kwargs.get('age'), kwargs.get('gender'), kwargs.get('workplace'), kwargs.get('workload'), kwargs.get('subjects'), kwargs.get('teaching_experience'), kwargs.get('class_management'), kwargs.get('classes'), kwargs.get('consent_study'), kwargs.get('consent_personal_data'), notifications_wanted))
             await conn.commit()
             user_id = cursor.lastrowid
-            return {"id": user_id, "name": name, "tg_id": tg_id, "tg_name": tg_name, **kwargs}
+            return {"id": user_id, "name": name, "tg_id": tg_id, "tg_name": tg_name, "notifications_wanted": notifications_wanted, **kwargs}
+
+
+    async def update_notifications_wanted(self, user_id: int, notifications_wanted: bool) -> None:
+        async with aiosqlite.connect(self.db_file) as conn:
+            await conn.execute("""
+                UPDATE users SET notifications_wanted = ? WHERE id = ?;
+            """, (notifications_wanted, user_id))
+            await conn.commit()
 
 
     async def add_response(self, user_id: int, timestamp: str, text: str) -> Dict[str, Union[int, str]]:
@@ -76,6 +85,7 @@ class Db:
                     "name": row[1],
                     "tg_id": row[2],
                     "tg_name": row[3],
+                    "notifications_wanted": row[-1],
                     "age": row[4],
                     "gender": row[5],
                     "workplace": row[6],
@@ -99,6 +109,7 @@ class Db:
                     "name": row[1],
                     "tg_id": row[2],
                     "tg_name": row[3],
+                    "notifications_wanted": row[-1],
                     "age": row[4],
                     "gender": row[5],
                     "workplace": row[6],
