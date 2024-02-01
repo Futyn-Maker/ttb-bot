@@ -9,13 +9,15 @@ from handlers import admin, client
 
 from bot import dp
 
+from config import ASKALL_CRONTAB
+
 
 logging.basicConfig(level=logging.DEBUG)
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
-@aiocron.crontab("0 13,18 * * *")
+@aiocron.crontab(ASKALL_CRONTAB)
 async def scheduled_ask_all():
     await admin.ask_all()
 
