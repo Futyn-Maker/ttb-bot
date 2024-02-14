@@ -66,7 +66,7 @@ async def export_data(message: types.Message):
 
     users_sheet = wb.active
     users_sheet.title = "Users"
-    users_fields = ["id", "name", "tg_id", "tg_name", "age", "gender", "workplace", "workload", "subjects", "teaching_experience", "class_management", "classes", "consent_study", "consent_personal_data", "notifications_wanted"]
+    users_fields = ["id", "name", "tg_id", "tg_name", "age", "gender", "workplace", "workload", "subjects", "teaching_experience", "class_management", "classes", "source", "consent_study", "consent_personal_data", "notifications_wanted"]
     users_sheet.append(users_fields)
 
     async for user in db.get_all_users():
