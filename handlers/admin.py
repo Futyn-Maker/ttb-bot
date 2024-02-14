@@ -83,5 +83,5 @@ async def export_data(message: types.Message):
     with BytesIO() as file:
         wb.save(file)
         file.seek(0)
-        excel_file = InputFile(file, filename="anchovy_data.xlsx")
+        excel_file = InputFile(file, filename="ttb_research_data.xlsx")
         await message.answer_document(document=excel_file)
